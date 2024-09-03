@@ -82,17 +82,35 @@ def take_action(action, rectangle):
     if action == 1:  # Jump
         rectangle.jump()
 
+if not os.path.exists('models/'):
+    os.makedirs('models/')
+if not os.path.exists(f"models/Training_{len(os.listdir('models/'))+1}/"):
+    os.makedirs(f"models/Training_{len(os.listdir('models/'))+1}/")
+
+best_agent_index = 0
+best_agent_reward = float('-inf')
+
 # Initialize pygame components (no screen needed for faster training)
 pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Parameters
-num_agents = 100
-num_episodes = 100
-obs = 4
-actions = 2
+num_agents = 500
+num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 100
 
-agents = [DQNAgent(state_dim=obs, action_dim=actions, lr=0.001, gamma=0.99, epsilon=1.0, epsilon_decay=0.995, buffer_size=10000) for _ in range(num_agents)]
+obs = 4 # distances 2xverticaly, horizantally, position
+actions = 2 # space or do nothing
+
+lr = 0.0005
+gamma = 0.99
+epsilon = 1.0
+epsilon_decay = 0.995
+buffer_size = 50000
+penalty = -1
+
+agents = [DQNAgent(state_dim=obs, action_dim=actions, lr=lr, gamma=gamma, epsilon=epsilon, epsilon_decay=epsilon_decay, buffer_size=buffer_size) for _ in range(num_agents)]
+
 episode_rewards = [[] for _ in range(num_agents)]
+
 
 for episode in range(num_episodes):
     rectangles = [Rectangle() for _ in range(num_agents)]
@@ -101,7 +119,7 @@ for episode in range(num_episodes):
     scores = [0 for _ in range(num_agents)]
     game_actives = [True for _ in range(num_agents)]
     
-    episode_reward = [0 for _ in range(num_agents)]
+    episode_reward = [[_, 0] for _ in range(num_agents)]
     
     while any(game_actives):
         for i in range(num_agents):
@@ -123,7 +141,8 @@ for episode in range(num_episodes):
             take_action(action, rectangles[i])
 
             rectangles[i].apply_gravity()
-
+            
+            reward = 0.1
             pipe_timers[i] += 1
             if pipe_timers[i] > 90:
                 pipes[i].append(Pipe())
@@ -133,49 +152,57 @@ for episode in range(num_episodes):
                 pipe.move()
                 if pipe.off_screen():
                     pipes[i].remove(pipe)
-                    episode_reward[i] += 1  # Adjust the reward as needed
+                    reward = 5  # Adjust the reward as needed
 
             # Check for collisions
             done = False
-            reward = 0.1
+            
             for pipe in pipes[i]:
                 if pygame.Rect(rectangles[i].x, rectangles[i].y, RECT_WIDTH, RECT_HEIGHT).colliderect(pipe.top) or \
                    pygame.Rect(rectangles[i].x, rectangles[i].y, RECT_WIDTH, RECT_HEIGHT).colliderect(pipe.bottom):
                     game_actives[i] = False
                     done = True
-                    reward = -1
+                    reward += penalty # -1
                     break
             if rectangles[i].y <= 0 or rectangles[i].y + RECT_HEIGHT >= SCREEN_HEIGHT:
                 game_actives[i] = False
                 done = True
-                reward = -1
-
+                reward += penalty # -1
             next_obs = get_observation(rectangles[i], pipes[i])
             
             agents[i].remember(obs, action, reward, next_obs, done)
-            episode_reward[i] += reward
+            episode_reward[i][1] += reward # episode_reward=[[0,reward],[1,reward]...]
             
             # Update the agent (could be done collectively after the loop)
-            agents[i].replay(batch_size=32)
+            agents[i].replay(batch_size=256)
+    
+    # for i in range(num_agents):
+    #         episode_rewards[i].append(episode_reward[i])
+    #         print(f"Agent {i+1}, Episode {episode+1}, Reward: {episode_reward[i]}")
+    # print(episode_reward)
 
-    for i in range(num_agents):
-        episode_rewards[i].append(episode_reward[i])
-        print(f"Agent {i+1}, Episode {episode+1}, Reward: {episode_reward[i]}")
+    #save the model
+    sorted_rewards = sorted(episode_reward, key=lambda x: x[1], reverse=True)
+    torch.save(agents[sorted_rewards[0][0]].model.state_dict(), f"models/Training_{len(os.listdir('models/'))}/best_{episode}.pth")
+    
+    average = sum([x[1] for x in sorted_rewards]) / len(sorted_rewards)
+    median = sorted_rewards[len(sorted_rewards)//2][1]
+    print(f"Episode_{episode}: {average}  |  Best: {sorted_rewards[0][0]}  |  {sorted_rewards[0][1]}")
+    with open(f"models/Training_{len(os.listdir('models/'))}/outputs.txt", "a") as file:
+        file.write(f"{episode} {median} {average} {sorted_rewards[0][1]}")
+file.close()
 
-# Save the trained models
-if not os.path.exists('models/'):
-    os.makedirs('models/')
-for i, agent in enumerate(agents):
-    torch.save(agent.model.state_dict(), f"models/flappy_agent_{i+1}.pth")
+# for i, agent in enumerate(agents):
+#     torch.save(agent.model.state_dict(), f"models/Training_{len(os.listdir('models/'))+1}/epoch_{i+1}.pth")
 
 # Plot the rewards
-plt.figure(figsize=(12, 6))
-for i in range(num_agents):
-    plt.plot(range(len(episode_rewards[i])), episode_rewards[i], label=f'Agent {i+1}')
-plt.title("Episode Rewards")
-plt.xlabel("Episode")
-plt.ylabel("Reward")
-plt.legend()
-plt.show()
+# plt.figure(figsize=(12, 6))
+# for i in range(num_agents):
+#     plt.plot(range(len(episode_rewards[i])), episode_rewards[i], label=f'Agent {i+1}')
+# plt.title("Episode Rewards")
+# plt.xlabel("Episode")
+# plt.ylabel("Reward")
+# plt.legend()
+# plt.show()
 
 pygame.quit()

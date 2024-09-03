@@ -6,7 +6,7 @@ import random
 from model import DQN
 
 class DQNAgent:
-    def __init__(self, state_dim, action_dim, lr=0.001, gamma=0.99, epsilon=1.0, epsilon_decay=0.98, buffer_size=10000):
+    def __init__(self, state_dim, action_dim, lr=0.001, gamma=0.99, epsilon=1.0, epsilon_decay=0.98, buffer_size=100000):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.lr = lr
@@ -29,7 +29,8 @@ class DQNAgent:
         # Convert NumPy array to PyTorch tensor and move to CUDA
         state_tensor = torch.tensor(state, dtype=torch.float32).to('cuda')
         
-        q_values = self.model(state_tensor)
+        with torch.no_grad():
+            q_values = self.model(state_tensor)
         return torch.argmax(q_values).item()
 
     
@@ -38,7 +39,7 @@ class DQNAgent:
         next_state_tensor = torch.tensor(next_state, dtype=torch.float32).to('cuda')
         self.memory.append((state_tensor, action, reward, next_state_tensor, done))
 
-    def replay(self, batch_size=32):
+    def replay(self, batch_size=128):
         if len(self.memory) < batch_size:
             return
         
@@ -70,7 +71,7 @@ class DQNAgent:
         if len(self.memory) % 100 == 0:
             self.target_model.load_state_dict(self.model.state_dict())
 
-    def save_model(self, filename):
+    def save_model(self, filename, episode):
         torch.save(self.model.state_dict(), filename)
 
     def load_model(self, filename):
