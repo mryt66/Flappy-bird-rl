@@ -5,15 +5,9 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-
 from collections import deque
 from agent2 import DQNAgent
-
-# Initialize pygame
-pygame.init()
-
-# Check if CUDA is available and set the device
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+from parameters import lr, gamma, epsilon, epsilon_decay, buffer_size, penalty
 
 # Game settings
 SCREEN_WIDTH = 400
@@ -99,7 +93,7 @@ rectangle = Rectangle()
 pipes = []
 pipe_timer = 0
 score = 0
-font = pygame.font.SysFont(None, 36)
+# font = pygame.font.SysFont(None, 36)
 game_active = True
 
 
@@ -108,7 +102,7 @@ obs = 4
 actions = 2
 
 # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-agent = DQNAgent(state_dim=obs, action_dim=actions, lr=0.001, gamma=0.99, epsilon=1.0, epsilon_decay=0.995, buffer_size=10000)
+agent = DQNAgent(state_dim=obs, action_dim=actions, lr=lr, gamma=gamma, epsilon=epsilon, epsilon_decay=epsilon_decay, buffer_size=buffer_size)
 
 episode_rewards = []
 num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 100
@@ -152,22 +146,22 @@ for episode in range(num_episodes):
             if pipe.off_screen():
                 pipes.remove(pipe)
                 score += 1
-                episode_reward += 1  # Adjust the reward as needed
+                # reward = 1  # Adjust the reward as needed
 
         # Check for collisions
         done = False
-        reward = 0.1
+        reward = 15
         for pipe in pipes:
             if pygame.Rect(rectangle.x, rectangle.y, RECT_WIDTH, RECT_HEIGHT).colliderect(pipe.top) or \
                pygame.Rect(rectangle.x, rectangle.y, RECT_WIDTH, RECT_HEIGHT).colliderect(pipe.bottom):
                 game_active = False
                 done = True
-                reward = -0.5
+                reward = -1000
                 break
         if rectangle.y <= 0 or rectangle.y + RECT_HEIGHT >= SCREEN_HEIGHT:
             game_active = False
             done = True
-            reward = -2
+            reward = -1000
 
         next_obs = get_observation()
         
@@ -175,10 +169,10 @@ for episode in range(num_episodes):
         episode_reward += reward
         
         # Update the agent
-        agent.replay(batch_size=32)
+        agent.replay(batch_size=128)
 
     episode_rewards.append(episode_reward)
-    print(f"Episode {episode+1}, Reward: {episode_reward}")
+    print(f"Episode {episode+1}, Reward: {episode_reward}, {score}")
 
 # Save the trained model
 if not os.path.exists('models/'):

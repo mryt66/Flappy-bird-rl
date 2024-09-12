@@ -87,9 +87,6 @@ if not os.path.exists('models/'):
 if not os.path.exists(f"models/Training_{len(os.listdir('models/'))+1}/"):
     os.makedirs(f"models/Training_{len(os.listdir('models/'))+1}/")
 
-best_agent_index = 0
-best_agent_reward = float('-inf')
-
 # Initialize pygame components (no screen needed for faster training)
 pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 

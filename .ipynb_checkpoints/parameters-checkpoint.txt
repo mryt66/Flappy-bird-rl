@@ -1,7 +1,0 @@
-https://www.phind.com/search?cache=hsdlec6ulxiv7kfsinl2nowfs
-lr = 0.0005
-gamma = 0.99
-epsilon = 1.0
-epsilon_decay = 0.995
-buffer_size = 50000
-penalty = -1

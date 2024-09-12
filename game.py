@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 
 from collections import deque
 from agent_cuda import DQNAgent
+from parameters import lr, gamma, epsilon, epsilon_decay, buffer_size, penalty
+
 
 pygame.init()
 
@@ -108,7 +110,7 @@ pygame.display.set_caption("Flappy Rectangle")
 
 rectangle = Rectangle()
 pipes = []
-pipe_timer = 0
+pipe_timer = 80
 score = 0
 font = pygame.font.SysFont(None, 36)
 game_active = True  # Start the game immediately
@@ -118,7 +120,7 @@ experience_buffer = deque(maxlen=10000)
 obs = 4
 actions = 2
 
-agent = DQNAgent(state_dim=obs, action_dim=actions, lr=0.001, gamma=0.99, epsilon=1.0, epsilon_decay=0.995, buffer_size=10000)
+agent = DQNAgent(state_dim=obs, action_dim=actions, lr=lr, gamma=gamma, epsilon=epsilon, epsilon_decay=epsilon_decay, buffer_size=buffer_size)
 
 episode_rewards = []
 num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 100
@@ -143,29 +145,22 @@ for episode in range(num_episodes):
                 pygame.quit()
                 sys.exit()
 
-        # Get current observation
         obs = get_observation()
-
-        # Choose an action
         action = agent.act(obs)
-
-        # Take the action
         take_action(action)
-
         rectangle.apply_gravity()
 
         pipe_timer += 1
         if pipe_timer > 90:
             pipes.append(Pipe())
             pipe_timer = 0
-
         for pipe in pipes:
             pipe.move()
             if pipe.off_screen():
                 pipes.remove(pipe)
                 score += 1
-                episode_reward += 3 * reward
-
+                reward += 1
+        
         for pipe in pipes:
             pipe.draw(screen)
 
