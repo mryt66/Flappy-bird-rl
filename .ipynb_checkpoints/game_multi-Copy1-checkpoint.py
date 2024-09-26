@@ -102,8 +102,8 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 reward = 0.1
 # Parameters
-num_agents = 5
-num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 100
+num_agents = 10
+num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
 
 obs = 4 # distances 2xverticaly, horizantally, position
 actions = 2 # space or do nothing

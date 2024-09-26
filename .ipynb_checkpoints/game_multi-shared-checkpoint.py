@@ -6,8 +6,10 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import deque
-from agent_cuda_shared import DQNAgent
 import time
+
+from agent_cuda_shared import DQNAgent
+
 
 pygame.init()
 

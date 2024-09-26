@@ -106,6 +106,19 @@ episode_rewards = [[] for _ in range(num_agents)]
 average_improvement = []
 shared_memory = deque(maxlen=batch_size * 10)
 
+
+def skip_frames(env, num_frames):
+    states = []
+    rewards = []
+    dones = []
+    for _ in range(num_frames):
+        state, reward, done, _, _ = env.step(action)
+        states.append(state)
+        rewards.append(reward)
+        dones.append(done)
+    return np.stack(states), sum(rewards), all(dones)
+
+
 for episode in range(num_episodes):
     time1 = time.time()
     rectangles = [Rectangle() for _ in range(num_agents)]
@@ -115,6 +128,9 @@ for episode in range(num_episodes):
     game_actives = [True for _ in range(num_agents)]
     
     episode_reward = [[_, 0] for _ in range(num_agents)]
+    
+    # Implement frame skipping
+    target_update_freq = 100
     
     while any(game_actives):
         for i in range(num_agents):
@@ -142,7 +158,6 @@ for episode in range(num_episodes):
                 pipe.move()
                 if pipe.off_screen():
                     pipes[i].remove(pipe)
-                    # reward = 5  # Adjust the reward as needed
                     scores[i] += 1
 
             # Check for collisions
@@ -165,18 +180,13 @@ for episode in range(num_episodes):
             episode_reward[i][1] += reward # episode_reward=[[0,reward],[1,reward]...]
             
             # Update the agent (could be done collectively after the loop)
-            # agents[i].replay(batch_size=batch_size)
-
-        # for agent in agents:
-        #     agent.replay(batch_size=batch_size)
+            agents[i].replay(batch_size)
     
-    
-    
-        # Reset individual agent memories for next episode
-        # for agent in agents:
-        #     agent.memory.clear()
-    
-    
+        # Implement frequent target updates
+        if episode % target_update_freq == 0:
+            for agent in agents:
+                agent.update_target_network()
+        
         # Share accumulated experiences every 25 episodes
         if episode % 6 == 5:  # 199 because episode count starts at 0
             # Have all agents learn from the shared buffer
@@ -189,18 +199,18 @@ for episode in range(num_episodes):
             for i, agent in enumerate(agents):
                 if i < num_top_agents:
                     # Top agents continue learning from their own experiences
-                    agent.replay(batch_size=batch_size)
+                    agent.replay(batch_size)
                 else:
                     # Other agents learn from the shared buffer
                     agent.shared_memory = shared_memory
-                    agent.replay(batch_size=batch_size)
+                    agent.replay(batch_size)
             
             # Reset shared memory for next accumulation period
             shared_memory.clear()
             print("*", end = "")
         else:
             for agent in agents:
-                agent.replay(batch_size=batch_size)
+                agent.replay(batch_size)
         
     #save the model
     sorted_rewards = sorted(episode_reward, key=lambda x: x[1], reverse=True)

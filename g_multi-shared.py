@@ -1,17 +1,23 @@
+import pygame
 import random
 import torch
 import os
 import sys
 import numpy as np
-from collections import deque
-from agent_cuda_shared import DQNAgent
+import matplotlib.pyplot as plt
 import time
-import pygame
+from statistics import mean
+from collections import deque
 
-# Parameters
+from agent_cuda import DQNAgent
+from parameters import lr, gamma, epsilon, epsilon_decay, buffer_size, live, penalty, batch_size
+
+
+# Game settings
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 600
 
+# Color definitions
 RECT_WIDTH = 35
 RECT_HEIGHT = 35
 PIPE_WIDTH = 70
@@ -19,25 +25,6 @@ PIPE_GAP = 220
 GRAVITY = 1
 JUMP_STRENGTH = -13
 PIPE_SPEED = 5
-
-num_agents = 10
-num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 100
-
-obs = 4  # distances 2x vertical, horizontally, position
-actions = 2  # space or do nothing
-
-lr = 0.001
-gamma = 0.95
-epsilon = 1.0
-epsilon_decay = 0.985
-buffer_size = 10000
-penalty = -100
-
-shared_memory = deque(maxlen=buffer_size)
-
-agents = [DQNAgent(state_dim=obs, action_dim=actions, lr=lr, gamma=gamma, epsilon=epsilon, epsilon_decay=epsilon_decay, memory=shared_memory) for _ in range(num_agents)]
-
-episode_rewards = [[] for _ in range(num_agents)]
 
 class Rectangle:
     def __init__(self):
@@ -92,7 +79,7 @@ def get_observation(rectangle, pipes):
     ])
     return observation
 
-def take_action(rectangle, action):
+def take_action(action, rectangle):
     if action == 1:  # Jump
         rectangle.jump()
 
@@ -101,66 +88,126 @@ if not os.path.exists('models/'):
 if not os.path.exists(f"models/Training_{len(os.listdir('models/'))+1}/"):
     os.makedirs(f"models/Training_{len(os.listdir('models/'))+1}/")
 
+# Initialize pygame components (no screen needed for faster training)
+# pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+# Parameters
+num_agents = 50
+num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 500
+
+obs = 4 # distances 2xverticaly, horizantally, position
+actions = 2 # space or do nothing
+
+
+agents = [DQNAgent(state_dim=obs, action_dim=actions, lr=lr, gamma=gamma, epsilon=epsilon, epsilon_decay=epsilon_decay, buffer_size=buffer_size) for _ in range(num_agents)]
+
+episode_rewards = [[] for _ in range(num_agents)]
+
+average_improvement = []
+shared_memory = deque(maxlen=batch_size * 10)
+
 for episode in range(num_episodes):
-    start_time = time.time()
+    time1 = time.time()
     rectangles = [Rectangle() for _ in range(num_agents)]
-    pipe_timer = 89
-    pipes = []
-    game_active = [True] * len(agents)
-    agent_reward = [[_, 0] for _ in range(num_agents)]
+    pipes = [[] for _ in range(num_agents)]
+    pipe_timers = [0 for _ in range(num_agents)]
+    scores = [0 for _ in range(num_agents)]
+    game_actives = [True for _ in range(num_agents)]
+    
+    episode_reward = [[_, 0] for _ in range(num_agents)]
+    
+    while any(game_actives):
+        for i in range(num_agents):
+            if not game_actives[i]:
+                continue
 
-    while any(game_active):
-        reward = 15
-        pipe_timer += 1
-        if pipe_timer > 90:
-            pipes.append(Pipe())
-            pipe_timer = 0
-        for pipe in pipes:
-            pipe.move()
-            if pipe.off_screen():
-                pipes.remove(pipe)
-        for pipe in pipes:
-            # Pipe drawing is removed for faster execution
-            pass
-        
-        for i, rectangle in enumerate(rectangles):
+            # Get current observation
+            obs = get_observation(rectangles[i], pipes[i])
+
+            # Choose an action
+            action = agents[i].act(obs)
+
+            # Take the action
+            take_action(action, rectangles[i])
+
+            rectangles[i].apply_gravity()
             
-            if game_active[i]:
-                obs = get_observation(rectangle, pipes)
-                action = agents[i].act(obs)
-                take_action(rectangle, action)
-                rectangle.apply_gravity()
-                done = False
+            reward = 15
+            pipe_timers[i] += 1
+            if pipe_timers[i] > 90:
+                pipes[i].append(Pipe())
+                pipe_timers[i] = 0
 
-                for pipe in pipes:
-                    if pygame.Rect(rectangle.x, rectangle.y, RECT_WIDTH, RECT_HEIGHT).colliderect(pipe.top) or \
-                       pygame.Rect(rectangle.x, rectangle.y, RECT_WIDTH, RECT_HEIGHT).colliderect(pipe.bottom):
-                        game_active[i] = False
-                        done = True
-                        reward = penalty
-                        break
-                if rectangle.y <= 0 or rectangle.y + RECT_HEIGHT >= SCREEN_HEIGHT:
-                    game_active[i] = False
+            for pipe in pipes[i]:
+                pipe.move()
+                if pipe.off_screen():
+                    pipes[i].remove(pipe)
+                    # reward = 5  # Adjust the reward as needed
+                    scores[i] += 1
+
+            # Check for collisions
+            done = False
+            
+            for pipe in pipes[i]:
+                if pygame.Rect(rectangles[i].x, rectangles[i].y, RECT_WIDTH, RECT_HEIGHT).colliderect(pipe.top) or \
+                   pygame.Rect(rectangles[i].x, rectangles[i].y, RECT_WIDTH, RECT_HEIGHT).colliderect(pipe.bottom):
+                    game_actives[i] = False
                     done = True
                     reward = penalty
-
-                next_obs = get_observation(rectangle, pipes)
-                agents[i].remember(obs, action, reward, next_obs, done)
-
-                agent_reward[i][1] += reward
-
-        for agent in agents:
-            agent.replay(batch_size=32)
-        
-    sorted_rewards = sorted(agent_reward, key=lambda x: x[1], reverse=True)
-    best_agent_index = sorted_rewards[0][0]
-    best_model_state_dict = agents[best_agent_index].model.state_dict()
-    if (episode + 1) % 10 == 0:
-        for i, agent in enumerate(agents):
-                if i != best_agent_index:
-                    agent.model.load_state_dict(best_model_state_dict)
-                    
-    torch.save(best_model_state_dict, f"models/Training_{len(os.listdir('models/'))}/best_{episode}.pth")
+                    break
+            if rectangles[i].y <= 0 or rectangles[i].y + RECT_HEIGHT >= SCREEN_HEIGHT:
+                game_actives[i] = False
+                done = True
+                reward = penalty 
+            next_obs = get_observation(rectangles[i], pipes[i])
+            
+            agents[i].remember(obs, action, reward, next_obs, done)
+            episode_reward[i][1] += reward # episode_reward=[[0,reward],[1,reward]...]
+            
+            # Update the agent (could be done collectively after the loop)
+            # agents[i].replay(batch_size=batch_size)
     
-    average = sum([x[1] for x in sorted_rewards]) / len(sorted_rewards)
-    print(f"Episode {episode+1}, Average: {average}, {sorted_rewards[0][1]}  Time: {time.time() - start_time}")
+    
+        # Share accumulated experiences every 25 episodes
+        if episode % 6 == 5:  # 199 because episode count starts at 0
+            # Have all agents learn from the shared buffer
+            
+            ranked_agents = sorted(zip(range(num_agents), episode_reward), key=lambda x: x[1][1], reverse=True)
+            num_top_agents = int(num_agents * 0.3)  
+            for agent_index, _ in ranked_agents[:num_top_agents]:
+                shared_memory.extend(agents[agent_index].memory)
+                
+            for i, agent in enumerate(agents):
+                if i < num_top_agents:
+                    # Top agents continue learning from their own experiences
+                    agent.replay(batch_size=batch_size)
+                else:
+                    # Other agents learn from the shared buffer
+                    agent.shared_memory = shared_memory
+                    agent.replay(batch_size=batch_size)
+            
+            # Reset shared memory for next accumulation period
+            shared_memory.clear()
+            print("*", end = "")
+        else:
+            for agent in agents:
+                agent.replay(batch_size=batch_size)
+        
+    #save the model
+    sorted_rewards = sorted(episode_reward, key=lambda x: x[1], reverse=True)
+    torch.save(agents[sorted_rewards[0][0]].model.state_dict(), f"models/Training_{len(os.listdir('models/'))}/best_{episode}.pth")
+    
+    average = np.average(sorted_rewards) 
+    average_improvement.append(average)
+    mean_improvement = np.average(average_improvement) 
+    
+    median = sorted_rewards[len(sorted_rewards)//2][1]
+    max_scores = max(scores)
+    time2 = time.time() - time1
+    
+    print(f"Episode_{episode}: {average}  | {sorted_rewards[0][1]} |  Avg_improvment: {mean_improvement} | {max_scores} | {time2:.2f}")
+    with open(f"models/Training_{len(os.listdir('models/'))}/outputs.txt", "a") as file:
+        file.write(f"{episode} | {median} | {average} | Avg_improvment: {mean_improvement} |      {max_scores}      | {time2:.2f}\n")
+file.close()
+
+pygame.quit()

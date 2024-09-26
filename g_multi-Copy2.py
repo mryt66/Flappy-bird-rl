@@ -92,7 +92,7 @@ if not os.path.exists(f"models/Training_{len(os.listdir('models/'))+1}/"):
 # pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Parameters
-num_agents = 50
+num_agents = 10
 num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 500
 
 obs = 4 # distances 2xverticaly, horizantally, position
@@ -104,7 +104,6 @@ agents = [DQNAgent(state_dim=obs, action_dim=actions, lr=lr, gamma=gamma, epsilo
 episode_rewards = [[] for _ in range(num_agents)]
 
 average_improvement = []
-shared_memory = deque(maxlen=batch_size * 10)
 
 for episode in range(num_episodes):
     time1 = time.time()
@@ -165,43 +164,8 @@ for episode in range(num_episodes):
             episode_reward[i][1] += reward # episode_reward=[[0,reward],[1,reward]...]
             
             # Update the agent (could be done collectively after the loop)
-            # agents[i].replay(batch_size=batch_size)
+            agents[i].replay(batch_size=batch_size)
 
-        # for agent in agents:
-        #     agent.replay(batch_size=batch_size)
-    
-    
-    
-        # Reset individual agent memories for next episode
-        # for agent in agents:
-        #     agent.memory.clear()
-    
-    
-        # Share accumulated experiences every 25 episodes
-        if episode % 6 == 5:  # 199 because episode count starts at 0
-            # Have all agents learn from the shared buffer
-            
-            ranked_agents = sorted(zip(range(num_agents), episode_reward), key=lambda x: x[1][1], reverse=True)
-            num_top_agents = int(num_agents * 0.3)  
-            for agent_index, _ in ranked_agents[:num_top_agents]:
-                shared_memory.extend(agents[agent_index].memory)
-                
-            for i, agent in enumerate(agents):
-                if i < num_top_agents:
-                    # Top agents continue learning from their own experiences
-                    agent.replay(batch_size=batch_size)
-                else:
-                    # Other agents learn from the shared buffer
-                    agent.shared_memory = shared_memory
-                    agent.replay(batch_size=batch_size)
-            
-            # Reset shared memory for next accumulation period
-            shared_memory.clear()
-            print("*", end = "")
-        else:
-            for agent in agents:
-                agent.replay(batch_size=batch_size)
-        
     #save the model
     sorted_rewards = sorted(episode_reward, key=lambda x: x[1], reverse=True)
     torch.save(agents[sorted_rewards[0][0]].model.state_dict(), f"models/Training_{len(os.listdir('models/'))}/best_{episode}.pth")

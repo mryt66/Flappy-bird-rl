@@ -6,7 +6,7 @@ import random
 from model import DQN
 
 class DQNAgent:
-    def __init__(self, state_dim, action_dim, lr=0.001, gamma=0.99, epsilon=1.0, epsilon_decay=0.995, buffer_size=10000):
+    def __init__(self, state_dim, action_dim, lr, gamma, epsilon, epsilon_decay, buffer_size):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.lr = lr
@@ -31,7 +31,7 @@ class DQNAgent:
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
-    def replay(self, batch_size=32):
+    def replay(self, batch_size):
         if len(self.memory) < batch_size:
             return
         

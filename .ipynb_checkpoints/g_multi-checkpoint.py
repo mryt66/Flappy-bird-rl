@@ -5,10 +5,12 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time
+from statistics import mean
 from collections import deque
+
 from agent_cuda import DQNAgent
-from parameters import lr, gamma, epsilon, epsilon_decay, buffer_size, penalty
+from parameters import lr, gamma, epsilon, epsilon_decay, buffer_size, live, penalty, batch_size
 
 
 # Game settings
@@ -90,8 +92,8 @@ if not os.path.exists(f"models/Training_{len(os.listdir('models/'))+1}/"):
 # pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Parameters
-num_agents = 20
-num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 100
+num_agents = 10
+num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 500
 
 obs = 4 # distances 2xverticaly, horizantally, position
 actions = 2 # space or do nothing
@@ -101,8 +103,10 @@ agents = [DQNAgent(state_dim=obs, action_dim=actions, lr=lr, gamma=gamma, epsilo
 
 episode_rewards = [[] for _ in range(num_agents)]
 
+average_improvement = []
 
 for episode in range(num_episodes):
+    time1 = time.time()
     rectangles = [Rectangle() for _ in range(num_agents)]
     pipes = [[] for _ in range(num_agents)]
     pipe_timers = [0 for _ in range(num_agents)]
@@ -138,6 +142,7 @@ for episode in range(num_episodes):
                 if pipe.off_screen():
                     pipes[i].remove(pipe)
                     # reward = 5  # Adjust the reward as needed
+                    scores[i] += 1
 
             # Check for collisions
             done = False
@@ -159,7 +164,7 @@ for episode in range(num_episodes):
             episode_reward[i][1] += reward # episode_reward=[[0,reward],[1,reward]...]
             
             # Update the agent (could be done collectively after the loop)
-            agents[i].replay(batch_size=32)
+            agents[i].replay(batch_size=batch_size)
     
     # for i in range(num_agents):
     #         episode_rewards[i].append(episode_reward[i])
@@ -170,11 +175,17 @@ for episode in range(num_episodes):
     sorted_rewards = sorted(episode_reward, key=lambda x: x[1], reverse=True)
     torch.save(agents[sorted_rewards[0][0]].model.state_dict(), f"models/Training_{len(os.listdir('models/'))}/best_{episode}.pth")
     
-    average = sum([x[1] for x in sorted_rewards]) / len(sorted_rewards)
+    average = np.average(sorted_rewards) 
+    average_improvement.append(average)
+    mean_improvement = np.average(average_improvement) 
+    
     median = sorted_rewards[len(sorted_rewards)//2][1]
-    print(f"Episode_{episode}: {average}  |  Best: {sorted_rewards[0][0]}  |  {sorted_rewards[0][1]}")
+    max_scores = max(scores)
+    time2 = time.time() - time1
+    
+    print(f"Episode_{episode}: {average}  | {sorted_rewards[0][1]} |  Avg_improvment: {mean_improvement} | {max_scores} | {time2:.2f}")
     with open(f"models/Training_{len(os.listdir('models/'))}/outputs.txt", "a") as file:
-        file.write(f"{episode} {median} {average} {sorted_rewards[0][1]}")
+        file.write(f"{episode} | {median} | {average} | Avg_improvment: {mean_improvement} |      {max_scores}      | {time2:.2f}\n")
 file.close()
 
 # for i, agent in enumerate(agents):

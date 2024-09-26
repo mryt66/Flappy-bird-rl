@@ -5,12 +5,14 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time
+from statistics import mean
 from collections import deque
-from agent_cuda import DQNAgent
 
-# Initialize pygame
-pygame.init()
+
+from agent_cuda import DQNAgent
+from parameters import lr, gamma, epsilon, epsilon_decay, buffer_size, penalty, live, batch_size
+
 
 # Game settings
 SCREEN_WIDTH = 400
@@ -88,28 +90,23 @@ if not os.path.exists(f"models/Training_{len(os.listdir('models/'))+1}/"):
     os.makedirs(f"models/Training_{len(os.listdir('models/'))+1}/")
 
 # Initialize pygame components (no screen needed for faster training)
-pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+#pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Parameters
-num_agents = 500
+num_agents = 10
 num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 100
 
 obs = 4 # distances 2xverticaly, horizantally, position
 actions = 2 # space or do nothing
 
-lr = 0.0005
-gamma = 0.99
-epsilon = 1.0
-epsilon_decay = 0.995
-buffer_size = 50000
-penalty = -1
-
 agents = [DQNAgent(state_dim=obs, action_dim=actions, lr=lr, gamma=gamma, epsilon=epsilon, epsilon_decay=epsilon_decay, buffer_size=buffer_size) for _ in range(num_agents)]
 
 episode_rewards = [[] for _ in range(num_agents)]
 
+average_improvement = []
 
 for episode in range(num_episodes):
+    time1 = time.time()
     rectangles = [Rectangle() for _ in range(num_agents)]
     pipes = [[] for _ in range(num_agents)]
     pipe_timers = [0 for _ in range(num_agents)]
@@ -123,10 +120,10 @@ for episode in range(num_episodes):
             if not game_actives[i]:
                 continue
             
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+            # for event in pygame.event.get():
+            #     if event.type == pygame.QUIT:
+            #         pygame.quit()
+            #         sys.exit()
 
             # Get current observation
             obs = get_observation(rectangles[i], pipes[i])
@@ -139,7 +136,8 @@ for episode in range(num_episodes):
 
             rectangles[i].apply_gravity()
             
-            reward = 0.1
+            reward = live
+            
             pipe_timers[i] += 1
             if pipe_timers[i] > 90:
                 pipes[i].append(Pipe())
@@ -149,7 +147,8 @@ for episode in range(num_episodes):
                 pipe.move()
                 if pipe.off_screen():
                     pipes[i].remove(pipe)
-                    reward = 5  # Adjust the reward as needed
+                    scores[i] += 1
+                    
 
             # Check for collisions
             done = False
@@ -182,11 +181,17 @@ for episode in range(num_episodes):
     sorted_rewards = sorted(episode_reward, key=lambda x: x[1], reverse=True)
     torch.save(agents[sorted_rewards[0][0]].model.state_dict(), f"models/Training_{len(os.listdir('models/'))}/best_{episode}.pth")
     
-    average = sum([x[1] for x in sorted_rewards]) / len(sorted_rewards)
+    average = np.average(sorted_rewards) 
+    average_improvement.append(average)
+    mean_improvement = np.average(average_improvement) 
+    
     median = sorted_rewards[len(sorted_rewards)//2][1]
-    print(f"Episode_{episode}: {average}  |  Best: {sorted_rewards[0][0]}  |  {sorted_rewards[0][1]}")
+    max_scores = max(scores)
+    time2 = time.time() - time1
+    
+    print(f"Episode_{episode}: {average}  | {sorted_rewards[0][1]} |  Avg_improvment: {mean_improvement} | {max_scores} | {time2:.2f}")
     with open(f"models/Training_{len(os.listdir('models/'))}/outputs.txt", "a") as file:
-        file.write(f"{episode} {median} {average} {sorted_rewards[0][1]}")
+        file.write(f"{episode} | {median} | {average} | Avg_improvment: {mean_improvement} |      {max_scores}      | {time2:.2f}\n")
 file.close()
 
 # for i, agent in enumerate(agents):
@@ -201,5 +206,3 @@ file.close()
 # plt.ylabel("Reward")
 # plt.legend()
 # plt.show()
-
-pygame.quit()

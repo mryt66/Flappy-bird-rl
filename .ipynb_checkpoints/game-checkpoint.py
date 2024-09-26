@@ -5,11 +5,13 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time
+from statistics import mean
 from collections import deque
-from agent_cuda import DQNAgent
-from parameters import lr, gamma, epsilon, epsilon_decay, buffer_size, penalty
 
+# from agent_cuda import DQNAgent
+from agent2 import DQNAgent
+from parameters import lr, gamma, epsilon, epsilon_decay, buffer_size, live, penalty, batch_size
 
 pygame.init()
 
@@ -123,9 +125,10 @@ actions = 2
 agent = DQNAgent(state_dim=obs, action_dim=actions, lr=lr, gamma=gamma, epsilon=epsilon, epsilon_decay=epsilon_decay, buffer_size=buffer_size)
 
 episode_rewards = []
-num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 100
+num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 400
 
 for episode in range(num_episodes):
+    time1 = time.time()
     rectangle.x = SCREEN_WIDTH // 4
     rectangle.y = SCREEN_HEIGHT // 2
     rectangle.y_speed = 0
@@ -187,7 +190,7 @@ for episode in range(num_episodes):
         episode_reward += reward
         
         # Update the agent
-        agent.replay(batch_size=32)
+        agent.replay(batch_size=batch_size)
 
         # Display the score
         score_text = font.render(f"Score: {score}", True, WHITE)
@@ -196,9 +199,14 @@ for episode in range(num_episodes):
         pygame.display.flip()
         pygame.time.Clock().tick(30)
 
+    time2 = time.time() - time1
     episode_rewards.append(episode_reward)
+    avg = np.average(episode_rewards)
     
-    print(f"Episode {episode+1}, Reward: {episode_reward}")
+    print(f"Episode {episode+1}| {episode_reward} | improvment: {avg:.2f} | {score} | {time2:.2f}")
+    with open(f"models/Training_{len(os.listdir('models/'))}/outputs.txt", "a") as file:
+        file.write(f"{episode} | improvment: {avg} | {score} | {time2:.2f}\n")
+
 
 # Save the trained model
 number = len(os.listdir('models/'))+1
