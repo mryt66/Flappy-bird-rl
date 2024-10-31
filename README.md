@@ -1,4 +1,6 @@
 The game is done, the README file is still in progress.
+![image](https://github.com/user-attachments/assets/412b7603-cdae-4398-84d1-e140afba778b)
+
 Soon I will move whole project to Unity.
 
 There is only 1 model for now in ```models/``` folder, soon there will be more to different tasks with differnt game properties.
