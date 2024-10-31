@@ -1,10 +1,7 @@
-# visualize_agent.py
-import os
 import torch
 import pygame
-import numpy as np
 from agent_cuda import DQNAgent
-from game import Environment, get_observation
+from game import Environment
 from parameters import DEVICE
 
 pygame.init()
@@ -61,7 +58,7 @@ def visualize_agent(agent, env):
 
 
 def main():
-    model_path = "models/flappy_agent_2.pth"
+    model_path = "models/best.pth"
     state_dim = 4
     action_dim = 2
     agent = load_trained_model(model_path, state_dim, action_dim)

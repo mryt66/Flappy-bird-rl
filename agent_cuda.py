@@ -5,19 +5,7 @@ import torch.optim as optim
 import numpy as np
 from collections import deque
 from model import DQN
-from parameters import (
-    DEVICE,
-    lr,
-    gamma,
-    epsilon,
-    epsilon_min,
-    epsilon_decay,
-    buffer_size,
-    batch_size,
-    target_update,
-    state_dim,
-    action_dim,
-)
+from parameters import DEVICE, batch_size
 
 
 class DQNAgent:

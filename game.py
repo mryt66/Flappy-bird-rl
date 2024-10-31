@@ -4,7 +4,6 @@ import random
 import torch
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 from agent_cuda import DQNAgent
 from parameters import (
     lr,
@@ -13,9 +12,14 @@ from parameters import (
     epsilon_decay,
     buffer_size,
     penalty,
-    DEVICE,
-    batch_size,
     target_update,
+    RECT_WIDTH,
+    RECT_HEIGHT,
+    PIPE_WIDTH,
+    PIPE_GAP,
+    GRAVITY,
+    JUMP_STRENGTH,
+    PIPE_SPEED,
 )
 
 RENDER = False
@@ -27,14 +31,6 @@ SCREEN_HEIGHT = 600
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-
-RECT_WIDTH = 35
-RECT_HEIGHT = 35
-PIPE_WIDTH = 70
-PIPE_GAP = 220
-GRAVITY = 1
-JUMP_STRENGTH = -10
-PIPE_SPEED = 5
 
 
 class Rectangle:
@@ -149,11 +145,13 @@ class Environment:
         done = False
         take_action(self.rectangle, action)
         self.rectangle.apply_gravity()
+
         self.pipe_timer += 1
         if self.pipe_timer > 90:
             self.pipes.append(Pipe())
             self.pipe_timer = 0
         pipes_to_remove = []
+
         for pipe in self.pipes:
             pipe.move()
             if pipe.has_passed(self.rectangle.x):
@@ -161,17 +159,21 @@ class Environment:
                 reward += 1
             if pipe.off_screen():
                 pipes_to_remove.append(pipe)
+
         for pipe in pipes_to_remove:
             self.pipes.remove(pipe)
+
         if self.render:
             self.screen.fill(BLACK)
             for pipe in self.pipes:
                 pipe.draw(self.screen)
             self.rectangle.draw(self.screen)
+
             score_text = self.font.render(f"Score: {self.score}", True, WHITE)
             self.screen.blit(score_text, (10, 10))
             pygame.display.flip()
             self.clock.tick(30)
+
         for pipe in self.pipes:
             rect = pygame.Rect(
                 self.rectangle.x, self.rectangle.y, RECT_WIDTH, RECT_HEIGHT
@@ -190,7 +192,9 @@ class Environment:
 
 
 def main():
-    num_agents = 5
+    num_agents = int(sys.argv[1]) if len(sys.argv) > 1 else 5
+    num_episodes = int(sys.argv[2]) if len(sys.argv) > 2 else 3000
+
     shared_env = Environment(render=False)
     agents = [
         DQNAgent(
@@ -207,10 +211,10 @@ def main():
     ]
     episode_rewards = [[] for _ in range(num_agents)]
     episode_scores = [[] for _ in range(num_agents)]
-    num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 5000
+
     os.makedirs("models", exist_ok=True)
     for episode in range(num_episodes):
-        best_score = -float("inf")
+        best_score = -9999
         best_agent_index = -1
         for i in range(num_agents):
             state = shared_env.reset()
@@ -225,15 +229,19 @@ def main():
                 state = next_state
                 total_reward += reward
                 total_score = shared_env.score
+
             agents[i].decay_epsilon()
+
             episode_rewards[i].append(total_reward)
             episode_scores[i].append(total_score)
             if total_score > best_score:
                 best_score = total_score
                 best_agent_index = i
+
         if (episode + 1) % target_update == 0:
             for agent in agents:
                 agent.update_target_network()
+                
         best_agent_reward = episode_rewards[best_agent_index][episode]
         best_agent_score = episode_scores[best_agent_index][episode]
         best_agent_epsilon = agents[best_agent_index].epsilon
