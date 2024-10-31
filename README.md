@@ -1,1 +1,2 @@
-This is still in progress, the game, isn't done yet. It is working but not as good as I would like it to work :)
+The game is done, the README file is still in progress.
+Soon I will add visualization in pygame and later move the whole project to Unity
