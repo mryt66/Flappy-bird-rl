@@ -139,7 +139,7 @@ class Environment:
     def reset(self):
         self.rectangle = Rectangle()
         self.pipes = []
-        self.pipe_timer = 0
+        self.pipe_timer = 89
         self.score = 0
         self.game_active = True
         return get_observation(self.rectangle, self.pipes)
