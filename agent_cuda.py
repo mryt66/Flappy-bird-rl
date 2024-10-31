@@ -5,10 +5,33 @@ import torch.optim as optim
 import numpy as np
 from collections import deque
 from model import DQN
-from parameters import DEVICE, lr, gamma, epsilon, epsilon_min, epsilon_decay, buffer_size, batch_size, target_update, state_dim, action_dim
+from parameters import (
+    DEVICE,
+    lr,
+    gamma,
+    epsilon,
+    epsilon_min,
+    epsilon_decay,
+    buffer_size,
+    batch_size,
+    target_update,
+    state_dim,
+    action_dim,
+)
+
 
 class DQNAgent:
-    def __init__(self, state_dim, action_dim, lr, gamma, epsilon, epsilon_decay, epsilon_min, buffer_size):
+    def __init__(
+        self,
+        state_dim,
+        action_dim,
+        lr,
+        gamma,
+        epsilon,
+        epsilon_decay,
+        epsilon_min,
+        buffer_size,
+    ):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
@@ -44,7 +67,7 @@ class DQNAgent:
     def replay(self):
         if len(self.memory) < self.batch_size:
             return
-        
+
         batch = random.sample(self.memory, self.batch_size)
         states, actions, rewards, next_states, dones = zip(*batch)
 
@@ -54,18 +77,13 @@ class DQNAgent:
         next_states = torch.FloatTensor(np.array(next_states)).to(DEVICE)
         dones = torch.FloatTensor(dones).unsqueeze(1).to(DEVICE)
 
-        # Current Q values
         current_q = self.policy_net(states).gather(1, actions)
 
-        # Next Q values from target network
         with torch.no_grad():
             max_next_q = self.target_net(next_states).max(1)[0].unsqueeze(1)
             target_q = rewards + (self.gamma * max_next_q * (1 - dones))
-        
-        # Compute loss
-        loss = self.loss_fn(current_q, target_q)
 
-        # Optimize the model
+        loss = self.loss_fn(current_q, target_q)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()

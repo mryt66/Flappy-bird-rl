@@ -1,7 +1,6 @@
-# model.py
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 
 class DQN(nn.Module):
     def __init__(self, state_dim, action_dim):
@@ -11,7 +10,6 @@ class DQN(nn.Module):
         self.fc3 = nn.Linear(128, 64)
         self.fc4 = nn.Linear(64, action_dim)
 
-    
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
