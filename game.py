@@ -259,8 +259,6 @@ def main():
                 f"models/s{max_score}_e{episode + 1}.pth",
             )
 
-    for i, agent in enumerate(agents):
-        torch.save(agent.policy_net.state_dict(), f"models/agent_{i+1}_{PIPE_GAP}_{JUMP_STRENGTH}_{PIPE_SPEED}.pth")
     overall_best_score = -9999
     overall_best_agent_index = -1
     for i in range(num_agents):
@@ -273,6 +271,7 @@ def main():
         f"Max score: {max_score}\n",
         f"\nOverall Best Agent Index: {overall_best_agent_index + 1}, Average Score: {overall_best_score:.2f}",
     )
+    torch.save(agents[overall_best_agent_index].policy_net.state_dict(), f"models/agent_{i+1}_{PIPE_GAP}_{JUMP_STRENGTH}_{PIPE_SPEED}.pth")
     pygame.quit()
 
 
