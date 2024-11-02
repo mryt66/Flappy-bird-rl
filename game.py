@@ -22,8 +22,11 @@ from parameters import (
     PIPE_SPEED,
 )
 
+global max_score
+max_score = 0
 RENDER = False
 pygame.init()
+
 
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 600
@@ -135,19 +138,19 @@ class Environment:
     def reset(self):
         self.rectangle = Rectangle()
         self.pipes = []
-        self.pipe_timer = 89
+        self.pipe_timer = 61
         self.score = 0
         self.game_active = True
         return get_observation(self.rectangle, self.pipes)
 
     def step(self, action):
-        reward = 0.1
+        reward = 0.2
         done = False
         take_action(self.rectangle, action)
         self.rectangle.apply_gravity()
 
         self.pipe_timer += 1
-        if self.pipe_timer > 90:
+        if self.pipe_timer > 60:
             self.pipes.append(Pipe())
             self.pipe_timer = 0
         pipes_to_remove = []
@@ -192,6 +195,7 @@ class Environment:
 
 
 def main():
+    max_score = 0
     num_agents = int(sys.argv[1]) if len(sys.argv) > 1 else 5
     num_episodes = int(sys.argv[2]) if len(sys.argv) > 2 else 3000
 
@@ -241,24 +245,33 @@ def main():
         if (episode + 1) % target_update == 0:
             for agent in agents:
                 agent.update_target_network()
-                
+
         best_agent_reward = episode_rewards[best_agent_index][episode]
         best_agent_score = episode_scores[best_agent_index][episode]
         best_agent_epsilon = agents[best_agent_index].epsilon
         print(
-            f"Episode {episode+1}, Reward: {best_agent_reward:.2f}, Score: {best_agent_score}, Epsilon: {best_agent_epsilon:.4f}"
+            f"Episode {episode+1}, Agent: {best_agent_index}, Score: {best_agent_score}, Epsilon: {best_agent_epsilon:.4f}"
         )
+        if best_agent_score > max_score:
+            max_score = best_agent_score
+            torch.save(
+                agents[best_agent_index].policy_net.state_dict(),
+                f"models/s{max_score}_e{episode + 1}.pth",
+            )
+
     for i, agent in enumerate(agents):
-        torch.save(agent.policy_net.state_dict(), f"models/flappy_agent_{i+1}.pth")
-    overall_best_score = -float("inf")
+        torch.save(agent.policy_net.state_dict(), f"models/agent_{i+1}_{PIPE_GAP}_{JUMP_STRENGTH}_{PIPE_SPEED}.pth")
+    overall_best_score = -9999
     overall_best_agent_index = -1
     for i in range(num_agents):
         avg_score = np.mean(episode_scores[i])
         if avg_score > overall_best_score:
             overall_best_score = avg_score
             overall_best_agent_index = i
+
     print(
-        f"\nOverall Best Agent Index: {overall_best_agent_index + 1}, Average Score: {overall_best_score:.2f}"
+        f"Max score: {max_score}\n",
+        f"\nOverall Best Agent Index: {overall_best_agent_index + 1}, Average Score: {overall_best_score:.2f}",
     )
     pygame.quit()
 
