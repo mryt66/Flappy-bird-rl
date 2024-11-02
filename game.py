@@ -138,7 +138,7 @@ class Environment:
     def reset(self):
         self.rectangle = Rectangle()
         self.pipes = []
-        self.pipe_timer = 61
+        self.pipe_timer = 51
         self.score = 0
         self.game_active = True
         return get_observation(self.rectangle, self.pipes)
@@ -150,7 +150,7 @@ class Environment:
         self.rectangle.apply_gravity()
 
         self.pipe_timer += 1
-        if self.pipe_timer > 60:
+        if self.pipe_timer > 50:
             self.pipes.append(Pipe())
             self.pipe_timer = 0
         pipes_to_remove = []
