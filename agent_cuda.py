@@ -23,6 +23,7 @@ class DQNAgent:
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
+        self.lr = lr
 
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay

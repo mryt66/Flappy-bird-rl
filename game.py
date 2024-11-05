@@ -13,6 +13,8 @@ from parameters import (
     buffer_size,
     penalty,
     target_update,
+    patience,
+    min_improvement,
     RECT_WIDTH,
     RECT_HEIGHT,
     PIPE_WIDTH,
@@ -196,6 +198,8 @@ class Environment:
 
 def main():
     max_score = 0
+    no_improvement_count = 0
+    best_avg_score = -9999
     num_agents = int(sys.argv[1]) if len(sys.argv) > 1 else 5
     num_episodes = int(sys.argv[2]) if len(sys.argv) > 2 else 3000
 
@@ -241,24 +245,45 @@ def main():
             if total_score > best_score:
                 best_score = total_score
                 best_agent_index = i
+# IJUU 1szy trening po lewej bez tego mechanizmu lr decreasing(lr=0.0005), drugi z tym elementem (lr=0.001*0.9)
+            # It decays every 1000 episodes to 
+            if episode % 500 == 0:
+                agents[i].lr *= 0.8
+
+        # Early stopping mechanism
+        if episode > 500:
+            avg_score = np.mean([np.mean(scores[-100:]) for scores in episode_scores]) # Scores is a list of lenght num_agents
+            if avg_score > best_avg_score + min_improvement:
+                best_avg_score = avg_score
+                no_improvement_count = 0 
+            else:
+                no_improvement_count += 1
+
+            if no_improvement_count >= patience:
+                print(f"Early stopping triggered at episode {episode+1} due to lack of improvement.")
+                break
 
         if (episode + 1) % target_update == 0:
             for agent in agents:
                 agent.update_target_network()
 
-        best_agent_reward = episode_rewards[best_agent_index][episode]
         best_agent_score = episode_scores[best_agent_index][episode]
         best_agent_epsilon = agents[best_agent_index].epsilon
         print(
             f"Episode {episode+1}, Agent: {best_agent_index}, Score: {best_agent_score}, Epsilon: {best_agent_epsilon:.4f}"
         )
-        if best_agent_score > max_score:
+        if best_agent_score > 15 and best_agent_score > max_score:
             max_score = best_agent_score
             torch.save(
                 agents[best_agent_index].policy_net.state_dict(),
-                f"models/s{max_score}_e{episode + 1}.pth",
+                f"models/s{max_score}_e{episode}.pth",
             )
-
+        if episode > 1000 and episode % 500 == 0:
+            torch.save(
+                agents[best_agent_index].policy_net.state_dict(),
+                f"models/last.pth",
+            )
+        
     overall_best_score = -9999
     overall_best_agent_index = -1
     for i in range(num_agents):
