@@ -61,7 +61,7 @@ def visualize_agent(agent, env):
 
 
 def main():
-    model_path = "models/s117_e1803.pth"
+    model_path = "models/s32_e1208.pth"
     state_dim = 4
     action_dim = 2
     agent = load_trained_model(model_path, state_dim, action_dim)
