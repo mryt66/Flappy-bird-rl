@@ -1,4 +1,5 @@
 import os
+from time import sleep
 import pygame
 import random
 import torch
@@ -52,6 +53,9 @@ class Rectangle:
                 dist_horizontal = pipe.top.left - self.x
                 gap_y_center = pipe.top.height + PIPE_GAP // 2
                 dist_vertically = self.y + RECT_HEIGHT // 2 - gap_y_center
+                
+                print(dist_horizontal, dist_vertically, "hmm")
+                sleep(0.1)
                 return dist_horizontal, dist_vertically
         return None, None
 
@@ -114,6 +118,7 @@ def get_observation(rectangle, pipes):
             rect_y_speed_normalized,
         ]
     )
+    print(observation)
     return observation
 
 

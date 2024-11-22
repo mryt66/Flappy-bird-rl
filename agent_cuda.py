@@ -57,6 +57,8 @@ class DQNAgent:
         self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
+        print(state)
+        
         if random.random() < self.epsilon:
             return random.choices([0, 1], weights=[0.70, 0.30])[0]
         state = torch.FloatTensor(state).unsqueeze(0).to(DEVICE)
