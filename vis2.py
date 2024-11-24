@@ -30,7 +30,6 @@ def read_state():
 
 def write_action(action):
     
-    os.remove(ISDONE_FILE)  
     try:
         """Write the chosen action to a JSON file safely."""
         temp_file = ACTION_FILE + ".tmp"
@@ -38,6 +37,7 @@ def write_action(action):
             json.dump({"action": int(action)}, file)
         os.replace(temp_file, ACTION_FILE)
         print(f"Action: {action}")
+        os.remove(ISDONE_FILE)  
     except Exception as e:
         print(f"Error writing action: {e}")
         return None
