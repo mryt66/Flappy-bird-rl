@@ -1,5 +1,6 @@
 import os
 import json
+from re import T
 from time import sleep
 import pygame
 import random
@@ -46,8 +47,8 @@ ISDONE_FILE = "C:/FlappyBirdBridge/isdone.json"
 
 def read_state():
     """Read the game state from a JSON file."""
-    if not os.path.exists(STATE_FILE):
-        return None, None, None, None
+    if not os.path.exists(STATE_FILE) or not os.path.exists(ISDONE_FILE):
+        return None, None, None, None, None
     with open(STATE_FILE, "r") as file:
         try:
             data = json.load(file)
@@ -61,25 +62,37 @@ def read_state():
             )
             reward = data["reward"]
             done = data["done"]
+            # if done == True:
+            #     print("Done: ", done)
+            # print("Done: ", done)
+            # # print("doneasdfasdfaf")
+            # if done == "true":
+            #     done = True
+            #     print("doneasdfasdfaf")
+            # else:
+            #     done = False
             score = data["score"]
-            return state, reward, done, score
+            return True, state, reward, done, score
         except Exception as e:
-            print(f"Error reading state: {e}")
-            return None, None, None, None
+            # print(f"Error reading state: {e}")
+            return None, None, None, None, None
 
 
 def write_action(action):
-
+    if not os.path.exists(ISDONE_FILE):    
+        # print("Czekam na plik isdone.json...")
+        return None
     try:
         """Write the chosen action to a JSON file safely."""
         temp_file = ACTION_FILE + ".tmp"
         with open(temp_file, "w") as file:
             json.dump({"action": int(action)}, file)
         os.replace(temp_file, ACTION_FILE)
-        print(f"Action: {action}")
+        # print(f"Action: {action}")
         os.remove(ISDONE_FILE)
+        return True
     except Exception as e:
-        print(f"Error writing action: {e}")
+        # print(f"Error writing action: {e}")
         return None
 
 
@@ -163,7 +176,7 @@ def get_observation(rectangle, pipes):
             rect_y_speed_normalized,
         ]
     )
-    print(observation)
+    # print(observation)
     return observation
 
 
@@ -240,7 +253,7 @@ class Environment:
 
 
 def main():
-    num_agents = 5
+    num_agents = 1
     shared_env = Environment(render=False)
     agents = [
         DQNAgent(
@@ -265,10 +278,13 @@ def main():
         for i in range(num_agents):
             state = None
             doneAction = None
-            while doneAction == None or state == None:
-                state = read_state()[state]  # shared_env.reset()
+            while doneAction == None or error == None:
+                error, state, reward, done, score = read_state()
+                if error == None:
+                    continue
                 doneAction = write_action(agents[i].act(state))
 
+            # print("ajsdf")
             done = False
             total_reward = 0
             total_score = 0
@@ -277,17 +293,24 @@ def main():
                 # next_state, reward, done = shared_env.step(action)
                 next_state = None
                 
+                error=None
                 while (
                     doneAction == None
-                    or next_state == None
+                    or error == None
                 ):
-                    next_state, reward, done, score = read_state()
+                    error, next_state, reward, done, score = read_state()
+                    if error == None:
+                        continue
                     doneAction = write_action(action)
+                    
+                # print(done)
+                # print(state)
                 agents[i].remember(state, action, reward, next_state, done)
                 agents[i].replay()
                 state = next_state
                 total_reward += reward
                 total_score = score#shared_env.score
+            print("done")
             agents[i].decay_epsilon()
             episode_rewards[i].append(total_reward)
             episode_scores[i].append(total_score)

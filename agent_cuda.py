@@ -54,10 +54,12 @@ class DQNAgent:
         self.steps_done = 0
 
     def remember(self, state, action, reward, next_state, done):
+        if len(state) != self.state_dim or len(next_state) != self.state_dim:
+            print("State shape mismatch: ", state, next_state)
         self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
-        print(state)
+        # print(state)
         
         if random.random() < self.epsilon:
             return random.choices([0, 1], weights=[0.70, 0.30])[0]
