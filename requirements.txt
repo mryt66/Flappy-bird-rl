@@ -1,0 +1,5 @@
+matplotlib==3.9.2
+numpy==1.26.3
+pygame==2.6.1
+torch==2.5.1+cu121
+#+cu121
