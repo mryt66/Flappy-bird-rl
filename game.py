@@ -1,13 +1,9 @@
 import os
-import json
-from re import T
-from time import sleep
 import pygame
 import random
 import torch
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 from agent_cuda import DQNAgent
 from parameters import (
     lr,
@@ -16,13 +12,23 @@ from parameters import (
     epsilon_decay,
     buffer_size,
     penalty,
-    DEVICE,
-    batch_size,
     target_update,
+    patience,
+    min_improvement,
+    RECT_WIDTH,
+    RECT_HEIGHT,
+    PIPE_WIDTH,
+    PIPE_GAP,
+    GRAVITY,
+    JUMP_STRENGTH,
+    PIPE_SPEED,
 )
 
+global max_score
+max_score = 0
 RENDER = False
 pygame.init()
+
 
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 600
@@ -30,70 +36,6 @@ SCREEN_HEIGHT = 600
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-
-RECT_WIDTH = 35
-RECT_HEIGHT = 35
-PIPE_WIDTH = 70
-PIPE_GAP = 220
-GRAVITY = 1
-JUMP_STRENGTH = -10
-PIPE_SPEED = 5
-
-
-STATE_FILE = "C:/FlappyBirdBridge/state.json"
-ACTION_FILE = "C:/FlappyBirdBridge/action.json"
-ISDONE_FILE = "C:/FlappyBirdBridge/isdone.json"
-
-
-def read_state():
-    """Read the game state from a JSON file."""
-    if not os.path.exists(STATE_FILE) or not os.path.exists(ISDONE_FILE):
-        return None, None, None, None, None
-    with open(STATE_FILE, "r") as file:
-        try:
-            data = json.load(file)
-            state = np.array(
-                [
-                    data["pipe_x"],  # Normalized pipe horizontal distance
-                    data["pipe_y"],  # Normalized pipe vertical distance
-                    data["rect_y"],  # Normalized rectangle position
-                    data["rect_y_speed"],  # Normalized rectangle speed
-                ]
-            )
-            reward = data["reward"]
-            done = data["done"]
-            # if done == True:
-            #     print("Done: ", done)
-            # print("Done: ", done)
-            # # print("doneasdfasdfaf")
-            # if done == "true":
-            #     done = True
-            #     print("doneasdfasdfaf")
-            # else:
-            #     done = False
-            score = data["score"]
-            return True, state, reward, done, score
-        except Exception as e:
-            # print(f"Error reading state: {e}")
-            return None, None, None, None, None
-
-
-def write_action(action):
-    if not os.path.exists(ISDONE_FILE):    
-        # print("Czekam na plik isdone.json...")
-        return None
-    try:
-        """Write the chosen action to a JSON file safely."""
-        temp_file = ACTION_FILE + ".tmp"
-        with open(temp_file, "w") as file:
-            json.dump({"action": int(action)}, file)
-        os.replace(temp_file, ACTION_FILE)
-        # print(f"Action: {action}")
-        os.remove(ISDONE_FILE)
-        return True
-    except Exception as e:
-        # print(f"Error writing action: {e}")
-        return None
 
 
 class Rectangle:
@@ -111,9 +53,6 @@ class Rectangle:
                 dist_horizontal = pipe.top.left - self.x
                 gap_y_center = pipe.top.height + PIPE_GAP // 2
                 dist_vertically = self.y + RECT_HEIGHT // 2 - gap_y_center
-
-                print(dist_horizontal, dist_vertically, "hmm")
-                sleep(0.1)
                 return dist_horizontal, dist_vertically
         return None, None
 
@@ -176,7 +115,6 @@ def get_observation(rectangle, pipes):
             rect_y_speed_normalized,
         ]
     )
-    # print(observation)
     return observation
 
 
@@ -202,21 +140,23 @@ class Environment:
     def reset(self):
         self.rectangle = Rectangle()
         self.pipes = []
-        self.pipe_timer = 89
+        self.pipe_timer = 51
         self.score = 0
         self.game_active = True
         return get_observation(self.rectangle, self.pipes)
 
     def step(self, action):
-        reward = 0.1
+        reward = 0.2
         done = False
         take_action(self.rectangle, action)
         self.rectangle.apply_gravity()
+
         self.pipe_timer += 1
-        if self.pipe_timer > 90:
+        if self.pipe_timer > 50:
             self.pipes.append(Pipe())
             self.pipe_timer = 0
         pipes_to_remove = []
+
         for pipe in self.pipes:
             pipe.move()
             if pipe.has_passed(self.rectangle.x):
@@ -224,17 +164,21 @@ class Environment:
                 reward += 1
             if pipe.off_screen():
                 pipes_to_remove.append(pipe)
+
         for pipe in pipes_to_remove:
             self.pipes.remove(pipe)
+
         if self.render:
             self.screen.fill(BLACK)
             for pipe in self.pipes:
                 pipe.draw(self.screen)
             self.rectangle.draw(self.screen)
+
             score_text = self.font.render(f"Score: {self.score}", True, WHITE)
             self.screen.blit(score_text, (10, 10))
             pygame.display.flip()
             self.clock.tick(30)
+
         for pipe in self.pipes:
             rect = pygame.Rect(
                 self.rectangle.x, self.rectangle.y, RECT_WIDTH, RECT_HEIGHT
@@ -253,7 +197,12 @@ class Environment:
 
 
 def main():
-    num_agents = 1
+    max_score = 0
+    no_improvement_count = 0
+    best_avg_score = -9999
+    num_agents = int(sys.argv[1]) if len(sys.argv) > 1 else 1
+    num_episodes = int(sys.argv[2]) if len(sys.argv) > 2 else 3000
+
     shared_env = Environment(render=False)
     agents = [
         DQNAgent(
@@ -270,73 +219,89 @@ def main():
     ]
     episode_rewards = [[] for _ in range(num_agents)]
     episode_scores = [[] for _ in range(num_agents)]
-    num_episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 5000
+
     os.makedirs("models", exist_ok=True)
     for episode in range(num_episodes):
-        best_score = -float("inf")
+        best_score = -9999
         best_agent_index = -1
         for i in range(num_agents):
-            state = None
-            doneAction = None
-            while doneAction == None or error == None:
-                error, state, reward, done, score = read_state()
-                if error == None:
-                    continue
-                doneAction = write_action(agents[i].act(state))
-
-            # print("ajsdf")
+            state = shared_env.reset()
             done = False
             total_reward = 0
             total_score = 0
             while not done:
                 action = agents[i].act(state)
-                # next_state, reward, done = shared_env.step(action)
-                next_state = None
-                error=None
-                while (
-                    doneAction == None
-                    or error == None
-                ):
-                    error, next_state, reward, done, score = read_state()
-                    if error == None:
-                        continue
-                    doneAction = write_action(action)
-                    
-                # print(done)
-                # print(state)
+                next_state, reward, done = shared_env.step(action)
                 agents[i].remember(state, action, reward, next_state, done)
                 agents[i].replay()
                 state = next_state
                 total_reward += reward
-                total_score = score#shared_env.score
-            print("done")
+                total_score = shared_env.score
+
             agents[i].decay_epsilon()
+
             episode_rewards[i].append(total_reward)
             episode_scores[i].append(total_score)
             if total_score > best_score:
                 best_score = total_score
                 best_agent_index = i
+# IJUU 1szy trening po lewej bez tego mechanizmu lr decreasing(lr=0.0005), drugi z tym elementem (lr=0.001*0.9)
+            # It decays every 1000 episodes to 
+
+
+        # Early stopping mechanism
+        if episode > 1000:
+            avg_score = np.mean([np.mean(scores[-100:]) for scores in episode_scores]) # Scores is a list of lenght num_agents
+            if avg_score > best_avg_score + min_improvement:
+                best_avg_score = avg_score
+                no_improvement_count = 0 
+            else:
+                no_improvement_count += 1
+
+            if no_improvement_count >= patience:
+                print(f"Early stopping triggered at episode {episode+1} due to lack of improvement.")
+                break
+
         if (episode + 1) % target_update == 0:
             for agent in agents:
                 agent.update_target_network()
-        best_agent_reward = episode_rewards[best_agent_index][episode]
+
         best_agent_score = episode_scores[best_agent_index][episode]
         best_agent_epsilon = agents[best_agent_index].epsilon
         print(
-            f"Episode {episode+1}, Reward: {best_agent_reward:.2f}, Score: {best_agent_score}, Epsilon: {best_agent_epsilon:.4f}"
+            f"Episode {episode+1}, Agent: {best_agent_index}, Score: {best_agent_score}, Epsilon: {best_agent_epsilon:.4f}"
         )
-    for i, agent in enumerate(agents):
-        torch.save(agent.policy_net.state_dict(), f"models/flappy_agent_{i+1}.pth")
-    overall_best_score = -float("inf")
+        if best_agent_score > 15 and best_agent_score > max_score:
+            max_score = best_agent_score
+            torch.save(
+                agents[best_agent_index].policy_net.state_dict(),
+                f"models/s{max_score}_e{episode}.pth",
+            )
+
+            # Buffing the best agent by replaying the best agent's memory
+            if best_agent_score > 100:
+                for i in range(5):
+                    agents[best_agent_index].replay()
+                    
+        if episode > 1000 and episode % 500 == 0:
+            torch.save(
+                agents[best_agent_index].policy_net.state_dict(),
+                f"models/last.pth",
+            )
+        
+    overall_best_score = -9999
     overall_best_agent_index = -1
     for i in range(num_agents):
         avg_score = np.mean(episode_scores[i])
         if avg_score > overall_best_score:
             overall_best_score = avg_score
             overall_best_agent_index = i
+
     print(
-        f"\nOverall Best Agent Index: {overall_best_agent_index + 1}, Average Score: {overall_best_score:.2f}"
+        f"Max score: {max_score}\n",
+        f"\nOverall Best Agent Index: {overall_best_agent_index + 1}, Average Score: {overall_best_score:.2f}",
     )
+    torch.save(agents[overall_best_agent_index].policy_net.state_dict(), f"models/agent_{i+1}_{PIPE_GAP}_{JUMP_STRENGTH}_{PIPE_SPEED}.pth")
     pygame.quit()
 
 

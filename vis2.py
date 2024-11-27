@@ -45,7 +45,7 @@ def write_action(action):
 def main():
     state_dim = 4
     action_dim = 2
-    model_path = "models/flappy_agent_2.pth"
+    model_path = "models/s104_e1757.pth"
     agent = DQNAgent(
         state_dim=state_dim,
         action_dim=action_dim,
