@@ -251,8 +251,8 @@ class Environment:
             done = True
             reward = penalty
             self.game_active = False
-        next_observation = get_observation(self.rectangle, self.pipes)
-        return next_observation, reward, done
+        next_state = get_observation(self.rectangle, self.pipes)
+        return next_state, reward, done
 
 
 def main():
