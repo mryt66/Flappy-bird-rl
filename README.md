@@ -1,5 +1,4 @@
-![image](https://github.com/user-attachments/assets/30f2586f-20d2-447a-af4f-152f9f63f448)
-<img src="https://github.com/user-attachments/assets/30f2586f-20d2-447a-af4f-152f9f63f448" alt="Description" width="300" height="200">
+<img src="https://github.com/user-attachments/assets/30f2586f-20d2-447a-af4f-152f9f63f448" alt="Description" width="300" height="600">
 
 ## How to run
 To run the visualiztion of trained model, type in terminal:
