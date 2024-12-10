@@ -1,8 +1,6 @@
-The game is done, the README file is still in progress.
+![image](https://github.com/user-attachments/assets/30f2586f-20d2-447a-af4f-152f9f63f448)
+<img src="https://github.com/user-attachments/assets/30f2586f-20d2-447a-af4f-152f9f63f448" alt="Description" width="300" height="200">
 
-Soon I will move whole project to Unity.
-
-There is only 1 model for now in ```models/``` folder, soon there will be more to different tasks with differnt game properties.
 ## How to run
 To run the visualiztion of trained model, type in terminal:
 ```
@@ -12,8 +10,4 @@ To run the visualiztion of trained model, type in terminal:
 To run the visualization run this command:
 ```
    python visualization.py
-```
-If you want to train a model, run requirements.txt file to install all needed requirements 
-```
-   pip install -r requirements.txt
 ```
