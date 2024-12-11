@@ -1,7 +1,7 @@
 # Flappy Bird AI
 Author: Marcin Ryt, Konrad Wołoszyn
 
-![Flappy Bird Gameplay](gifs/Film.gif)
+<img src="gifs/Film.gif" alt="Flappy Bird Gameplay" width="200">
 
 
 Unity
