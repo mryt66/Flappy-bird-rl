@@ -1,0 +1,16 @@
+{"time":"2024-12-05T13:44:09.6704332+01:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-12-05T13:44:09.6704332+01:00","level":"INFO","msg":"created symlink","path":"C:\\Users\\kogut\\PYTHONIK\\Flappy-bird-rl\\wandb\\run-20241205_134409-tyk19yvx\\logs\\debug-core.log"}
+{"time":"2024-12-05T13:44:09.9145543+01:00","level":"INFO","msg":"created new stream","id":"tyk19yvx"}
+{"time":"2024-12-05T13:44:09.9145543+01:00","level":"INFO","msg":"stream: started","id":"tyk19yvx"}
+{"time":"2024-12-05T13:44:09.9145543+01:00","level":"INFO","msg":"handler: started","stream_id":"tyk19yvx"}
+{"time":"2024-12-05T13:44:09.9145543+01:00","level":"INFO","msg":"sender: started","stream_id":"tyk19yvx"}
+{"time":"2024-12-05T13:44:09.9145543+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"tyk19yvx"}
+{"time":"2024-12-05T13:44:10.2849137+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-12-05T14:04:59.9512482+01:00","level":"INFO","msg":"stream: closing","id":"tyk19yvx"}
+{"time":"2024-12-05T14:04:59.9512482+01:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-12-05T14:04:59.9512482+01:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-12-05T14:05:00.9787863+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-12-05T14:05:01.2617199+01:00","level":"INFO","msg":"writer: Close: closed","stream_id":"tyk19yvx"}
+{"time":"2024-12-05T14:05:01.2617199+01:00","level":"INFO","msg":"handler: closed","stream_id":"tyk19yvx"}
+{"time":"2024-12-05T14:05:01.2617199+01:00","level":"INFO","msg":"sender: closed","stream_id":"tyk19yvx"}
+{"time":"2024-12-05T14:05:01.2617199+01:00","level":"INFO","msg":"stream: closed","id":"tyk19yvx"}

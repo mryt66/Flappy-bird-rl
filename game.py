@@ -4,6 +4,8 @@ import random
 import torch
 import sys
 import numpy as np
+import time
+import wandb
 from agent_cuda import DQNAgent
 from parameters import (
     lr,
@@ -24,11 +26,29 @@ from parameters import (
     PIPE_SPEED,
 )
 
-global max_score
+
+wandb.init(
+    project="Flappy_Rectangle_DQN",
+    config={
+        "learning_rate": lr,
+        "gamma": gamma,
+        "epsilon": epsilon,
+        "epsilon_decay": epsilon_decay,
+        "buffer_size": buffer_size,
+        "penalty": penalty,
+        "target_update": target_update,
+        "patience": patience,
+        "min_improvement": min_improvement,
+        "pipe_gap": PIPE_GAP,
+        "gravity": GRAVITY,
+        "jump_strength": JUMP_STRENGTH,
+        "pipe_speed": PIPE_SPEED,
+    },
+)
+
 max_score = 0
 RENDER = False
 pygame.init()
-
 
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 600
@@ -107,6 +127,7 @@ def get_observation(rectangle, pipes):
     normalized_vertical = dist_vertically / SCREEN_HEIGHT
     rect_y_normalized = rectangle.y / SCREEN_HEIGHT
     rect_y_speed_normalized = rectangle.y_speed / JUMP_STRENGTH
+
     observation = np.array(
         [
             normalized_horizontal,
@@ -121,6 +142,8 @@ def get_observation(rectangle, pipes):
 def take_action(rectangle, action):
     if action == 1:
         rectangle.jump()
+    else:
+        pass
 
 
 class Environment:
@@ -192,8 +215,8 @@ class Environment:
             done = True
             reward = penalty
             self.game_active = False
-        next_observation = get_observation(self.rectangle, self.pipes)
-        return next_observation, reward, done
+        next_state = get_observation(self.rectangle, self.pipes)
+        return next_state, reward, done
 
 
 def main():
@@ -221,6 +244,9 @@ def main():
     episode_scores = [[] for _ in range(num_agents)]
 
     os.makedirs("models", exist_ok=True)
+
+    start_time = time.time()
+
     for episode in range(num_episodes):
         best_score = -9999
         best_agent_index = -1
@@ -229,8 +255,10 @@ def main():
             done = False
             total_reward = 0
             total_score = 0
+            action_count = 0
             while not done:
                 action = agents[i].act(state)
+                action_count += 1
                 next_state, reward, done = shared_env.step(action)
                 agents[i].remember(state, action, reward, next_state, done)
                 agents[i].replay()
@@ -245,21 +273,26 @@ def main():
             if total_score > best_score:
                 best_score = total_score
                 best_agent_index = i
-# IJUU 1szy trening po lewej bez tego mechanizmu lr decreasing(lr=0.0005), drugi z tym elementem (lr=0.001*0.9)
-            # It decays every 1000 episodes to 
 
+        reward_std = np.std([np.sum(rewards) for rewards in episode_rewards[i]])
 
-        # Early stopping mechanism
         if episode > 1000:
-            avg_score = np.mean([np.mean(scores[-100:]) for scores in episode_scores]) # Scores is a list of lenght num_agents
+            avg_score = np.mean(
+                [np.mean(scores[-100:]) for scores in episode_scores]
+            ) 
             if avg_score > best_avg_score + min_improvement:
                 best_avg_score = avg_score
-                no_improvement_count = 0 
+                no_improvement_count = 0
             else:
                 no_improvement_count += 1
 
             if no_improvement_count >= patience:
-                print(f"Early stopping triggered at episode {episode+1} due to lack of improvement.")
+                torch.save(
+                    agents[best_agent_index].policy_net.state_dict(), f"models/last.pth"
+                )
+                print(
+                    f"Early stopping triggered at episode {episode+1} due to lack of improvement."
+                )
                 break
 
         if (episode + 1) % target_update == 0:
@@ -268,9 +301,11 @@ def main():
 
         best_agent_score = episode_scores[best_agent_index][episode]
         best_agent_epsilon = agents[best_agent_index].epsilon
+        
         print(
             f"Episode {episode+1}, Agent: {best_agent_index}, Score: {best_agent_score}, Epsilon: {best_agent_epsilon:.4f}"
         )
+
         if best_agent_score > 15 and best_agent_score > max_score:
             max_score = best_agent_score
             torch.save(
@@ -278,17 +313,24 @@ def main():
                 f"models/s{max_score}_e{episode}.pth",
             )
 
-            # Buffing the best agent by replaying the best agent's memory
-            if best_agent_score > 100:
-                for i in range(5):
-                    agents[best_agent_index].replay()
-                    
-        if episode > 1000 and episode % 500 == 0:
-            torch.save(
-                agents[best_agent_index].policy_net.state_dict(),
-                f"models/last.pth",
-            )
-        
+        wandb.log(
+            {
+                "episode": episode + 1,
+                "best_score": best_score,
+                "average_reward": np.mean(
+                    [np.mean(rewards) for rewards in episode_rewards]
+                ),
+                "reward_std": reward_std,
+                "epsilon": agents[best_agent_index].epsilon,
+            }
+        )
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    wandb.log({"max_score": max_score, "total_training_time": elapsed_time})
+
+    print(f"Training completed in {elapsed_time:.2f} seconds")
+
     overall_best_score = -9999
     overall_best_agent_index = -1
     for i in range(num_agents):
@@ -301,9 +343,14 @@ def main():
         f"Max score: {max_score}\n",
         f"\nOverall Best Agent Index: {overall_best_agent_index + 1}, Average Score: {overall_best_score:.2f}",
     )
-    torch.save(agents[overall_best_agent_index].policy_net.state_dict(), f"models/agent_{i+1}_{PIPE_GAP}_{JUMP_STRENGTH}_{PIPE_SPEED}.pth")
+    torch.save(
+        agents[overall_best_agent_index].policy_net.state_dict(),
+        f"models/agent_{i+1}_{PIPE_GAP}_{JUMP_STRENGTH}_{PIPE_SPEED}.pth",
+    )
     pygame.quit()
 
 
 if __name__ == "__main__":
     main()
+    api = wandb.Api()
+    runs = api.runs("mryt66-politechnika-l-ka/Flappy_Rectangle_DQN/uskx2u8w")

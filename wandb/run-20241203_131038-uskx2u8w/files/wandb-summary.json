@@ -1,0 +1,1 @@
+{"_step":2999,"best_score":1,"_wandb":{"runtime":1391},"_timestamp":1.733229230041267e+09,"_runtime":1391.1866545,"lr":0.0005,"epsilon":0.011071529464453693,"reward_std":118.74078701994777,"average_reward":49.73546666666684,"episode":3000}

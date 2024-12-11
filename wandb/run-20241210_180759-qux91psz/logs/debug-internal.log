@@ -1,0 +1,16 @@
+{"time":"2024-12-10T18:07:59.0533324+01:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-12-10T18:07:59.0533324+01:00","level":"INFO","msg":"created symlink","path":"C:\\Users\\kogut\\PYTHONIK\\Flappy-bird-rl\\wandb\\run-20241210_180759-qux91psz\\logs\\debug-core.log"}
+{"time":"2024-12-10T18:07:59.2880761+01:00","level":"INFO","msg":"created new stream","id":"qux91psz"}
+{"time":"2024-12-10T18:07:59.2885961+01:00","level":"INFO","msg":"stream: started","id":"qux91psz"}
+{"time":"2024-12-10T18:07:59.2885961+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"qux91psz"}
+{"time":"2024-12-10T18:07:59.2885961+01:00","level":"INFO","msg":"sender: started","stream_id":"qux91psz"}
+{"time":"2024-12-10T18:07:59.2885961+01:00","level":"INFO","msg":"handler: started","stream_id":"qux91psz"}
+{"time":"2024-12-10T18:07:59.7285805+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-12-10T18:08:03.2351219+01:00","level":"INFO","msg":"stream: closing","id":"qux91psz"}
+{"time":"2024-12-10T18:08:03.2351219+01:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-12-10T18:08:03.2351219+01:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-12-10T18:08:04.0541148+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-12-10T18:08:04.3271944+01:00","level":"INFO","msg":"handler: closed","stream_id":"qux91psz"}
+{"time":"2024-12-10T18:08:04.3271944+01:00","level":"INFO","msg":"sender: closed","stream_id":"qux91psz"}
+{"time":"2024-12-10T18:08:04.3271944+01:00","level":"INFO","msg":"writer: Close: closed","stream_id":"qux91psz"}
+{"time":"2024-12-10T18:08:04.3271944+01:00","level":"INFO","msg":"stream: closed","id":"qux91psz"}

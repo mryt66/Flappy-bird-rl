@@ -1,0 +1,8 @@
+Episode 1, Agent: 0, Score: 0, Epsilon: 0.9985
+Traceback (most recent call last):
+  File "C:\Users\kogut\PYTHONIK\Flappy-bird-rl\g.py", line 356, in <module>
+    main()
+  File "C:\Users\kogut\PYTHONIK\Flappy-bird-rl\g.py", line 324, in main
+    "q_value_distribution": [np.mean(agent.q_values) for agent in agents],
+                                     ^^^^^^^^^^^^^^
+AttributeError: 'DQNAgent' object has no attribute 'q_values'

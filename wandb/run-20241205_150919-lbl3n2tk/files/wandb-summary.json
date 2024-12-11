@@ -1,0 +1,1 @@
+{"total_training_time":2006.0814056396484,"episode":3000,"epsilon":0.011071529464453693,"_runtime":2007.9486578,"max_score":120,"best_score":1,"average_reward":41.329066666666584,"_timestamp":1.7334097676653416e+09,"_wandb":{"runtime":2008},"reward_std":93.13205539338072,"_step":3000}

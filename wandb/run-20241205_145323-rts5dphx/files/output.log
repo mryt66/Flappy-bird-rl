@@ -1,0 +1,10 @@
+Episode 1, Agent: 0, Score: 0, Epsilon: 0.9985
+Traceback (most recent call last):
+  File "C:\Users\kogut\PYTHONIK\Flappy-bird-rl\g.py", line 353, in <module>
+    main()
+  File "C:\Users\kogut\PYTHONIK\Flappy-bird-rl\g.py", line 270, in main
+    agents[i].replay()
+  File "C:\Users\kogut\PYTHONIK\Flappy-bird-rl\agent_cuda.py", line 68, in replay
+    print(device)
+          ^^^^^^
+NameError: name 'device' is not defined

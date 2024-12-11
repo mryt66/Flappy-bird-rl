@@ -1,0 +1,17 @@
+Episode 1, Agent: 1484, Score: 1, Epsilon: 0.9985
+Traceback (most recent call last):
+  File "C:\Users\kogut\PYTHONIK\Flappy-bird-rl\g.py", line 352, in <module>
+    if __name__ == "__main__":
+        ^^^^^^
+  File "C:\Users\kogut\PYTHONIK\Flappy-bird-rl\g.py", line 268, in main
+    agents[i].replay()
+  File "C:\Users\kogut\PYTHONIK\Flappy-bird-rl\agent_cuda.py", line 77, in replay
+    loss.backward()
+  File "C:\Users\kogut\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\_tensor.py", line 581, in backward
+    torch.autograd.backward(
+  File "C:\Users\kogut\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\autograd\__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "C:\Users\kogut\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\autograd\graph.py", line 825, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

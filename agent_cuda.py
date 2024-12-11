@@ -65,7 +65,6 @@ class DQNAgent:
         rewards = torch.FloatTensor(rewards).unsqueeze(1).to(DEVICE)
         next_states = torch.FloatTensor(np.array(next_states)).to(DEVICE)
         dones = torch.FloatTensor(dones).unsqueeze(1).to(DEVICE)
-
         current_q = self.policy_net(states).gather(1, actions)
 
         with torch.no_grad():

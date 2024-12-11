@@ -1,0 +1,1 @@
+{"lr":0.0005,"_step":0,"best_score":1,"epsilon":0.9985,"_timestamp":1.7332277732495046e+09,"_runtime":5.9564825,"episode":1,"_wandb":{"runtime":58},"average_reward":-2.075666666666664,"reward_std":0}

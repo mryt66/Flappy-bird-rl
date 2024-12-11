@@ -1,0 +1,16 @@
+{"time":"2024-12-05T15:09:19.7191048+01:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-12-05T15:09:19.7191048+01:00","level":"INFO","msg":"created symlink","path":"C:\\Users\\kogut\\PYTHONIK\\Flappy-bird-rl\\wandb\\run-20241205_150919-lbl3n2tk\\logs\\debug-core.log"}
+{"time":"2024-12-05T15:09:19.8258777+01:00","level":"INFO","msg":"created new stream","id":"lbl3n2tk"}
+{"time":"2024-12-05T15:09:19.8258777+01:00","level":"INFO","msg":"stream: started","id":"lbl3n2tk"}
+{"time":"2024-12-05T15:09:19.8258777+01:00","level":"INFO","msg":"handler: started","stream_id":"lbl3n2tk"}
+{"time":"2024-12-05T15:09:19.8258777+01:00","level":"INFO","msg":"sender: started","stream_id":"lbl3n2tk"}
+{"time":"2024-12-05T15:09:19.8258777+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"lbl3n2tk"}
+{"time":"2024-12-05T15:09:20.1684121+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-12-05T15:42:48.2519732+01:00","level":"INFO","msg":"stream: closing","id":"lbl3n2tk"}
+{"time":"2024-12-05T15:42:48.2519732+01:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-12-05T15:42:48.2519732+01:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-12-05T15:42:50.5446714+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-12-05T15:42:50.7811172+01:00","level":"INFO","msg":"handler: closed","stream_id":"lbl3n2tk"}
+{"time":"2024-12-05T15:42:50.7811172+01:00","level":"INFO","msg":"writer: Close: closed","stream_id":"lbl3n2tk"}
+{"time":"2024-12-05T15:42:50.7811172+01:00","level":"INFO","msg":"sender: closed","stream_id":"lbl3n2tk"}
+{"time":"2024-12-05T15:42:50.7811172+01:00","level":"INFO","msg":"stream: closed","id":"lbl3n2tk"}

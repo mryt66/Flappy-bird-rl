@@ -1,0 +1,26 @@
+Episode 1, Agent: 0, Score: 0, Epsilon: 0.9985
+Episode 2, Agent: 0, Score: 0, Epsilon: 0.9970
+Episode 3, Agent: 0, Score: 0, Epsilon: 0.9955
+Episode 4, Agent: 0, Score: 0, Epsilon: 0.9940
+Episode 5, Agent: 0, Score: 0, Epsilon: 0.9925
+Episode 6, Agent: 0, Score: 0, Epsilon: 0.9910
+Episode 7, Agent: 0, Score: 0, Epsilon: 0.9895
+Episode 8, Agent: 0, Score: 0, Epsilon: 0.9881
+Episode 9, Agent: 0, Score: 0, Epsilon: 0.9866
+Episode 10, Agent: 0, Score: 0, Epsilon: 0.9851
+Training completed in 0.54 seconds
+Max score: 0
+
+Overall Best Agent Index: 1, Average Score: 0.00
+Traceback (most recent call last):
+  File "C:\Users\kogut\PYTHONIK\Flappy-bird-rl\g.py", line 359, in <module>
+    for run in runs:
+  File "C:\Users\kogut\AppData\Local\Programs\Python\Python312\Lib\site-packages\wandb\apis\paginator.py", line 75, in __next__
+    if not self._load_page():
+           ^^^^^^^^^^^^^^^^^
+  File "C:\Users\kogut\AppData\Local\Programs\Python\Python312\Lib\site-packages\wandb\apis\paginator.py", line 62, in _load_page
+    self.objects.extend(self.convert_objects())
+                        ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\kogut\AppData\Local\Programs\Python\Python312\Lib\site-packages\wandb\apis\public\runs.py", line 139, in convert_objects
+    raise ValueError("Could not find project {}".format(self.project))
+ValueError: Could not find project Flappy_Rectangle_DQN/uskx2u8w

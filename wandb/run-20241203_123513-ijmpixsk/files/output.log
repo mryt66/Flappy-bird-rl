@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "C:\Users\kogut\PYTHONIK\Flappy-bird-rl\g.py", line 356, in <module>
+    main()
+  File "C:\Users\kogut\PYTHONIK\Flappy-bird-rl\g.py", line 288, in main
+    "reward_std": reward_std,
+                  ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'reward_std' where it is not associated with a value
