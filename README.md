@@ -19,7 +19,8 @@ State Sharing: Unity sends the current game state to Python for processing.
 Action Responses: Python computes the optimal action (flap or no-flap) and sends it back to Unity.
 
 ## How to run
-'''Note: this version is just simple visualization in Pygame.'''
+''Note: this version is just simple visualization in Pygame.''
+
 To run the visualiztion of trained model, type in terminal:
 ```
    git clone https://github.com/mryt66/Flappy-bird-rl.git
