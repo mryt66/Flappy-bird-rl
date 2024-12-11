@@ -5,9 +5,8 @@
 
 How does it work?
 =============
-Due to problems with uploading files, Unity program is in ```unityBranch1```
-The main part of the game is developed in Unity, providing the visual and interactive components of the Flappy Bird game. The Unity project includes the following:
-A fully designed 2D environment with the bird, pipes, background, and physics-based interactions for realistic gameplay.
+The main part of the game is developed in Unity, providing the visual and interactive components of the Flappy Bird game.
+Game includes a fully designed 2D environment with the bird, pipes, background, and physics-based interactions for realistic gameplay.
 The training process involves both Unity and Python. Unity serves as the environment simulator, while Python handles the AI agent's logic and learning.
 
 Unity-Python Connection
