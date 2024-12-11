@@ -1,4 +1,4 @@
-<img src="https://github.com/user-attachments/assets/30f2586f-20d2-447a-af4f-152f9f63f448" alt="Description" width="300" height="600">
+https://github.com/user-attachments/assets/9e55703b-d070-4353-a155-a24a42190bdc
 
 ## How to run
 To run the visualiztion of trained model, type in terminal:
