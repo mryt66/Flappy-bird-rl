@@ -299,9 +299,13 @@ def main():
             for agent in agents:
                 agent.update_target_network()
 
+        if best_agent_score > 100:
+            for agent in agents:
+                agent.replay()
+
         best_agent_score = episode_scores[best_agent_index][episode]
         best_agent_epsilon = agents[best_agent_index].epsilon
-        
+
         print(
             f"Episode {episode+1}, Agent: {best_agent_index}, Score: {best_agent_score}, Epsilon: {best_agent_epsilon:.4f}"
         )
@@ -312,6 +316,11 @@ def main():
                 agents[best_agent_index].policy_net.state_dict(),
                 f"models/s{max_score}_e{episode}.pth",
             )
+
+        if best_agent_score > 100:
+            for agent in agents:
+                for _ in range(10):
+                    agent.replay()
 
         wandb.log(
             {

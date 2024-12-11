@@ -1,0 +1,49 @@
+_wandb:
+    value:
+        cli_version: 0.18.7
+        m: []
+        python_version: 3.12.0
+        t:
+            "1":
+                - 1
+                - 55
+            "2":
+                - 1
+                - 55
+            "3":
+                - 16
+                - 23
+                - 55
+            "4": 3.12.0
+            "5": 0.18.7
+            "8":
+                - 3
+                - 5
+            "12": 0.18.7
+            "13": windows-amd64
+buffer_size:
+    value: 100000
+epsilon:
+    value: 1
+epsilon_decay:
+    value: 0.9985
+gamma:
+    value: 0.99
+gravity:
+    value: 1
+jump_strength:
+    value: -9
+learning_rate:
+    value: 0.0005
+min_improvement:
+    value: 0.01
+patience:
+    value: 400
+penalty:
+    value: -10
+pipe_gap:
+    value: 140
+pipe_speed:
+    value: 6
+target_update:
+    value: 5

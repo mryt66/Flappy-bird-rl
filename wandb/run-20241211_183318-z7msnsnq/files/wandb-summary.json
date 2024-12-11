@@ -1,0 +1,1 @@
+{"average_reward":52.90926456542495,"_timestamp":1.733939965490053e+09,"_runtime":1567.1864909,"total_training_time":1565.8006582260132,"best_score":25,"_step":3141,"episode":3141,"max_score":183,"epsilon":0.01,"_wandb":{"runtime":1567},"reward_std":114.7726275989778}

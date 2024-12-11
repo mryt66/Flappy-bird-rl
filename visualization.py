@@ -61,7 +61,7 @@ def visualize_agent(agent, env):
 
 
 def main():
-    model_path = "models/s32_e1208.pth"
+    model_path = "models/s183_e2461.pth"
     agent = load_trained_model(model_path, 4, 2)
     env = Environment(render=True)
     visualize_agent(agent, env)
