@@ -68,22 +68,15 @@ def main():
     print("Python agent for visualization started. Waiting for Unity...")
 
     while True:
-        # time.sleep(0.01)
         if not os.path.exists(ISDONE_FILE):
             # print("Czekam na plik isdone.json...")
-            # return
             continue
         else:
-
             state = read_state()
-            # time.sleep(0.01)
-            # print("State readed")
             if state is not None:
                 print(f"State: {state}")
                 action = agent.act(state)
-                # print("Action done")
                 write_action(action)
-                # print(action)
 
 
 if __name__ == "__main__":

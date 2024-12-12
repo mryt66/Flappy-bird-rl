@@ -62,15 +62,6 @@ def read_state():
             )
             reward = data["reward"]
             done = data["done"]
-            # if done == True:
-            #     print("Done: ", done)
-            # print("Done: ", done)
-            # # print("doneasdfasdfaf")
-            # if done == "true":
-            #     done = True
-            #     print("doneasdfasdfaf")
-            # else:
-            #     done = False
             score = data["score"]
             return True, state, reward, done, score
         except Exception as e:
@@ -88,11 +79,9 @@ def write_action(action):
         with open(temp_file, "w") as file:
             json.dump({"action": int(action)}, file)
         os.replace(temp_file, ACTION_FILE)
-        # print(f"Action: {action}")
         os.remove(ISDONE_FILE)
         return True
     except Exception as e:
-        # print(f"Error writing action: {e}")
         return None
 
 
@@ -322,9 +311,6 @@ def main():
             if total_reward > best_reward:
                 best_reward = total_reward
                 best_agent_index = i
-# IJUU 1szy trening po lewej bez tego mechanizmu lr decreasing(lr=0.0005), drugi z tym elementem (lr=0.001*0.9)
-            # It decays every 1000 episodes to 
-
 
         # Early stopping mechanism
         if episode > 1000:
