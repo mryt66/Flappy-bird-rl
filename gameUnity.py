@@ -65,13 +65,11 @@ def read_state():
             score = data["score"]
             return True, state, reward, done, score
         except Exception as e:
-            # print(f"Error reading state: {e}")
             return None, None, None, None, None
 
 
 def write_action(action):
-    if not os.path.exists(ISDONE_FILE):    
-        # print("Czekam na plik isdone.json...")
+    if not os.path.exists(ISDONE_FILE):
         return None
     try:
         """Write the chosen action to a JSON file safely."""
@@ -305,7 +303,7 @@ def main():
                 total_score = score#shared_env.score
 
             agents[i].decay_epsilon()
-            print(total_reward, total_score)
+            # print(total_reward, total_score)
             episode_rewards[i].append(total_reward)
             episode_scores[i].append(total_score)
             if total_reward > best_reward:
@@ -332,8 +330,9 @@ def main():
         best_agent_score = episode_scores[best_agent_index][episode]
         best_agent_reward = episode_rewards[best_agent_index][episode]
         best_agent_epsilon = agents[best_agent_index].epsilon
+        print()
         print(
-            f"Episode {episode+1}, Agent: {best_agent_index}, Reward: {best_agent_reward:.2f}, Score: {best_agent_score}, Epsilon: {best_agent_epsilon:.4f}"
+            f"Episode {episode+1}, Reward: {best_agent_reward:.2f}, Score: {best_agent_score}, Epsilon: {best_agent_epsilon:.4f}"
         )
         if best_agent_score > 15 and best_agent_score > max_score:
             max_score = best_agent_score
